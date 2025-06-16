@@ -1,7 +1,125 @@
-# app.py
 import streamlit as st
 import random
 from datetime import datetime
+
+# Custom CSS for enhanced styling
+st.markdown("""
+<style>
+    /* Main background */
+    .stApp {
+        background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
+    }
+    
+    /* Chat container */
+    .stChatFloatingInputContainer {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 15px;
+    }
+    
+    /* User messages */
+    .user-message .stChatMessage {
+        background-color: #d1e7ff !important;
+        border-radius: 18px 18px 4px 18px !important;
+        color: #004085;
+    }
+    
+    /* Assistant messages */
+    .assistant-message .stChatMessage {
+        background-color: white !important;
+        border-radius: 18px 18px 18px 4px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        color: #333;
+    }
+    
+    /* Header styling */
+    .header {
+        background: linear-gradient(90deg, #0072ff 0%, #00c6ff 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0 0 20px 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background: linear-gradient(90deg, #0072ff 0%, #00c6ff 100%) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 114, 255, 0.3) !important;
+    }
+    
+    /* Chat input */
+    .stTextInput>div>div>input {
+        border-radius: 20px !important;
+        padding: 12px 20px !important;
+        border: 1px solid #e0e0e0 !important;
+    }
+    
+    /* Emergency badge */
+    .emergency-badge {
+        background: linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+    
+    /* Warning badge */
+    .warning-badge {
+        background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%);
+        color: #333;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+    
+    /* Medication card */
+    .medication-card {
+        background: linear-gradient(135deg, #f5f9ff 0%, #e6f0ff 100%);
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid #4d94ff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Step card */
+    .step-card {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid #33cc33;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Footer */
+    .footer {
+        text-align: center;
+        padding: 1rem;
+        color: #666;
+        font-size: 0.85rem;
+        margin-top: 2rem;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Comprehensive Medical Knowledge Base
 MEDICAL_KNOWLEDGE = {
@@ -192,37 +310,78 @@ def get_condition_from_input(user_input):
 def format_medication_info(meds):
     formatted = []
     for med in meds:
-        info = f"- **{med['name']}**: {med['dosage']}"
-        if "max" in med:
-            info += f" (Max: {med['max']})"
+        info = f"""
+        <div class="medication-card">
+            <b>{med['name']}</b><br>
+            <span style="color: #0066cc;">Dosage: {med['dosage']}</span>
+            {f"<br><span style='color: #ff5500;'>Max: {med['max']}</span>" if "max" in med else ""}
+        </div>
+        """
         formatted.append(info)
     return "\n".join(formatted)
 
-# Chat UI
-st.title("⚕️ Medical Assistance Chatbot")
-st.caption("⚠️ For informational purposes only - Not a substitute for professional medical advice")
+def format_steps_info(steps):
+    formatted = []
+    for i, step in enumerate(steps, 1):
+        info = f"""
+        <div class="step-card">
+            <b>Step {i}:</b> {step}
+        </div>
+        """
+        formatted.append(info)
+    return "\n".join(formatted)
 
-# Display disclaimer
-with st.expander("Important Disclaimer"):
-    st.warning("""
-    This chatbot provides general health information and is not a substitute for professional medical advice. 
-    Always consult with a qualified healthcare provider for diagnosis and treatment. 
+# Header with gradient background
+st.markdown("""
+<div class="header">
+    <h1 style="margin:0; padding:0;">⚕️ MediAssist</h1>
+    <p style="margin:0; padding:0; opacity:0.9;">Your personal medical assistant for minor health concerns</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Sidebar with features and disclaimer
+with st.sidebar:
+    st.markdown("## 🌟 Features")
+    st.markdown("""
+    - Symptom analysis
+    - First aid guidance
+    - Medication suggestions
+    - Emergency protocols
+    - Follow-up questions
+    """)
     
-    In case of emergency:
-    - Call your local emergency number immediately
-    - For US: Call 911 or go to nearest emergency room
-    - For Poison Control: 1-800-222-1222
+    st.markdown("## 📋 Common Conditions")
+    cols = st.columns(2)
+    for i, condition in enumerate(MEDICAL_KNOWLEDGE.keys()):
+        with cols[i % 2]:
+            st.info(f"• {condition.title()}")
+    
+    st.markdown("## ⚠️ Important Disclaimer")
+    st.warning("""
+    This chatbot provides general health information only. 
+    It is not a substitute for professional medical advice. 
+    
+    For emergencies:
+    - Call your local emergency number
+    - In the US: Call 911
+    - Poison Control: 1-800-222-1222
     """)
 
 # Display messages
 for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    if msg["role"] == "user":
+        st.markdown(f'<div class="user-message">', unsafe_allow_html=True)
+        st.chat_message("user").write(msg["content"])
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="assistant-message">', unsafe_allow_html=True)
+        st.chat_message("assistant").write(msg["content"], unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # User input
 if prompt := st.chat_input("Describe your symptoms or health concern..."):
     # Add user message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
     
     # Process input
     response = ""
@@ -234,14 +393,14 @@ if prompt := st.chat_input("Describe your symptoms or health concern..."):
         info = MEDICAL_KNOWLEDGE[condition]
         
         if "better" in prompt_lower or "improved" in prompt_lower:
-            response = f"Good to hear your {condition} is improving. Continue with:"
-            response += "\n\n" + "\n".join(f"- {step}" for step in info["steps"])
+            response = f"✅ Good to hear your {condition} is improving. Continue with:"
+            response += f"\n{format_steps_info(info['steps']}"
             response += "\n\nIf symptoms return or worsen, consult a healthcare provider."
         else:
-            response = f"Since your {condition} hasn't improved, I recommend:"
+            response = f"⚠️ Since your {condition} hasn't improved, I recommend:"
             response += "\n\n- Consult a healthcare professional within 24 hours"
-            response += "\n- Continue with the self-care steps"
-            response += "\n- Monitor for warning signs: " + info["warning"]
+            response += f"\n{format_steps_info(info['steps']}"
+            response += f"\n\n<div class='warning-badge'>Monitor for warning signs: {info['warning']}</div>"
         
         st.session_state.last_condition = None
     
@@ -250,7 +409,7 @@ if prompt := st.chat_input("Describe your symptoms or health concern..."):
         result = get_condition_from_input(prompt_lower)
         
         if result["type"] == "emergency":
-            response = result["response"]
+            response = f"<div class='emergency-badge'>EMERGENCY ALERT</div>{result['response']}"
             response += "\n\nAfter calling emergency services, please update me on your status when safe."
         
         elif result["type"] == "condition":
@@ -258,13 +417,19 @@ if prompt := st.chat_input("Describe your symptoms or health concern..."):
             info = MEDICAL_KNOWLEDGE[condition]
             st.session_state.last_condition = condition
             
-            response = f"**Based on your symptoms, this may relate to {condition.replace('_', ' ').title()}**\n\n"
-            response += "**Recommended Care Steps:**\n" + "\n".join(f"- {step}" for step in info["steps"])
-            response += "\n\n**Medication Options:**\n" + format_medication_info(info["medications"])
-            response += f"\n\n⚠️ **Warning:** {info['warning']}"
+            response = f"<div style='font-size:18px; color:#0066cc; margin-bottom:10px;'><b>Possible Condition: {condition.title()}</b></div>"
+            
+            response += "<div style='margin-bottom:15px;'><b>Recommended Care Steps:</b></div>"
+            response += format_steps_info(info["steps"])
+            
+            response += "<div style='margin-top:20px; margin-bottom:10px;'><b>Medication Options:</b></div>"
+            response += format_medication_info(info["medications"])
+            
+            response += f"\n\n<div class='warning-badge'>Important: {info['warning']}</div>"
             
             if "questions" in info:
-                response += f"\n\n**To help further, please answer:**\n" + "\n".join(f"- {q}" for q in info["questions"])
+                response += f"\n\n<div style='margin-top:20px;'><b>To help further, please answer:</b></div>"
+                response += "\n".join(f"- {q}" for q in info["questions"])
         
         else:
             generic_responses = [
@@ -275,16 +440,26 @@ if prompt := st.chat_input("Describe your symptoms or health concern..."):
                 "I'm here to help. Please share more details about your health concern."
             ]
             response = random.choice(generic_responses)
-            response += "\n\nI can assist with: " + ", ".join([c.replace('_', ' ') for c in MEDICAL_KNOWLEDGE.keys()])
+            response += "\n\nI can assist with: " + ", ".join([c.replace('_', ' ').title() for c in MEDICAL_KNOWLEDGE.keys()])
     
     # Add assistant response
     st.session_state.messages.append({"role": "assistant", "content": response})
-    st.chat_message("assistant").write(response)
+    st.rerun()
 
 # Add reset button
-if st.button("Clear Conversation"):
-    st.session_state.messages = [
-        {"role": "assistant", "content": "Hello! I'm your Medical Assistant. Please describe your symptoms or health concern."}
-    ]
-    st.session_state.last_condition = None
-    st.experimental_rerun()
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
+    if st.button("🔄 Clear Conversation", use_container_width=True):
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hello! I'm your Medical Assistant. Please describe your symptoms or health concern."}
+        ]
+        st.session_state.last_condition = None
+        st.rerun()
+
+# Footer
+st.markdown("""
+<div class="footer">
+    <p>MediAssist v1.0 | For demonstration purposes only | Not for medical diagnosis</p>
+    <p>Always consult with a qualified healthcare provider for medical advice</p>
+</div>
+""", unsafe_allow_html=True)
